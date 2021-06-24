@@ -2,6 +2,7 @@ import {Component, OnDestroy, OnInit} from '@angular/core';
 import {AuthService} from "../../core/services/auth.service";
 import {NgForm} from "@angular/forms";
 import {SubSink} from "subsink";
+import {Observable} from "rxjs";
 
 @Component({
   selector: 'app-login',
@@ -9,13 +10,25 @@ import {SubSink} from "subsink";
 })
 export class LoginComponent implements OnInit, OnDestroy {
   subscriptions: SubSink
+  errorMsg: string
 
   constructor(private authService: AuthService) {
     this.subscriptions = new SubSink()
+    this.errorMsg = ''
   }
 
   ngOnInit(): void {
-    this.subscriptions.sink = this.authService.getUser$().subscribe(e => alert(e))
+    this.subscriptions.sink = this.authService.getUser$().subscribe(user => {
+      if (user != null) {
+        this.authService.redirectAuthenticated().catch(err => console.log(err))
+      }
+    })
+
+    this.subscriptions.sink = this.authService.getError$().subscribe(error => {
+      if (error != null) {
+        this.errorMsg = error
+      }
+    })
   }
 
   ngOnDestroy() {
